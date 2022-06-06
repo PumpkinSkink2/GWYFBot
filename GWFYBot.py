@@ -1,10 +1,3 @@
-# What need do:
-# 1.see course, find flagpole... maybe
-# 2.aim camera
-# 3.set power
-# 4.did ball go in?
-# 	if not, repeat above.
-
 import pyautogui
 import pydirectinput
 import time
@@ -13,7 +6,7 @@ import random
 
 time.sleep(2)
 
-#moves the camera
+# Moves the camera. Only use if you really need increments of less than 10 in the r argument.
 def move(r,d): 
 	if d == 'R':
 		k = 1
@@ -23,16 +16,13 @@ def move(r,d):
 		k = 1
 	win32api.mouse_event(0x0001,r*1*k, 0)
 
-#aims the camera
-	# originally it was a tool to help calibrate the number of "mickeys" 
-	# the mouse needs to move to do 1 full rotation (it was 450 for me). 
-	# now it functions as a better version of the old aim function. it is more consistent.
+# Aims the camera more reliabliy.
 def aim(r,d, delay = 0.001):
 	for i in range(r):
 		move(10,d)
 		time.sleep(delay)
 
-#sets power and shoots the ball. I found that the bar has 500 values that can be incremented here. 
+# Sets power and shoots the ball. I found that the bar has 500 values that can be incremented here. If you find it doesn't, use power_calibrate() to help you fix it.
 def power(p, noshot = False, delay = 1):
 	win32api.mouse_event(0x0002,0,0)
 	win32api.mouse_event(0x0001,0,(-1*p))
@@ -69,13 +59,13 @@ def power_calibrate(num, n = 10 ,stepsize = 10, mode = 'set', delay = 1):
 def reset():
 	pydirectinput.press('r')
 
-#automates shooting
+#automates shooting. Is not an ambiturner. It will always turn right first, then left.
 def shoot(a,p):
 		aim(a,'R')
 		power(p)
 		aim(a,'L')
 
-# Lets the bot detect when the next hole begins.
+# Lets the bot detect when the next hole begins. Works similarly to the goalcheck() function.
 def waitfornexthole():
 	g = False
 	px = pyautogui.pixel(543,988)
@@ -104,7 +94,8 @@ def goalcheck():
 		return (g)
 
 # takes a number of angle, power slice to be searched and outputs a list of coordinates
-# that can be used to search the "shot space".
+# that can be used to search the "shot space". needs to use even divisors of the total number of values for angle (450) and power (500). 
+# If you change those values in aim() or power() you're gonna want to change the divisors here as well.
 def gencoordlist(n_angle_slices, n_power_slices):
 
 	a_divisors = [1, 2, 3, 5, 6, 9, 10, 15, 18, 25, 30, 45, 50, 75, 90, 150, 225, 450]
@@ -127,19 +118,11 @@ def gencoordlist(n_angle_slices, n_power_slices):
 		for i in (range(n_power_slices)):
 			powerlist.append(i)
 
-		# print(str(anglelist) + '\n ffffffffffffffffffffffff \n' + str(powerlist))
-
 		for i in range(len(anglelist)):
 			for j in range(len(powerlist)):
 				coordlist.append([anglelist[i],(1 + powerlist[-1-(j)])])
 
 		return[coordlist,a_slice,p_slice]
-
-
-
-
-	
-	# print (n_angle_slices, n_power_slices)
 
 #takes preliminary shots leading up to a search for a hole-in-one. Otherwise, the bot would just reset after every hit.
 def preliminaryshots(course_coords, holenumber, moreshots, checktime = 10):
@@ -160,7 +143,7 @@ def preliminaryshots(course_coords, holenumber, moreshots, checktime = 10):
 			time.sleep(checktime)
 	print('I think I am done hitting preliminary shots.')
 
-#runs the bot. Will, ideally, find and return the coords for a hole in one shot to be replayed later.
+# Will, ideally, find and return the coords for a hole in one shot to be replayed later. Should be able to handel multiple shots. Moving game geometery is another story.
 def findhio(n_angle_slices, n_power_slices, preshot_list, holenumber, moreshots, checktime = 10):
 	
 	coord_set = []
@@ -224,7 +207,7 @@ def learn_course(n_angle_slices, n_power_slices, name = None, checktime = 10, ho
 		print('---------- Hole ' + str(i + 1) + ' ----------')
 		while nexthole == False:
 
-			# Checks if hole is done and waits for the next one. Also increments the holenumber (in current form by nexthole = True. I think this might be worth changing)
+			# Checks if hole is done and waits for the next one. Also increments the holenumber.
 			if nexthole == True:
 				print('I think the ball is in the hole now, and am waiting for the next level')
 				course_coords.append([raw_coords[0],raw_coords[1],i])
